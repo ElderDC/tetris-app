@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 18.1.1, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 132 48" enable-background="new 0 0 132 48" xml:space="preserve">
+<g id="Layer_1">
+	<path fill="currentColor" d="M24,24V12H12V0H0v36c0,6.6,5.4,12,12,12c6.6,0,12-5.4,12-12H12V24H24z"/>
+	<path fill="currentColor" d="M48,24c0-6.6-5.4-12-12-12c-6.6,0-12,5.4-12,12v12c0,6.6,5.4,12,12,12c6.6,0,12-5.4,12-12H36
+		C42.7,36,48,30.6,48,24z"/>
+	<path fill="currentColor" d="M72,24V12H60V0H48v36c0,6.6,5.4,12,12,12c6.6,0,12-5.4,12-12H60V24H72z"/>
+	<path fill="currentColor" d="M120,24h12c0-6.6-5.4-12-12-12s-12,5.4-12,12s5.4,12,12,12h-12c0,6.6,5.4,12,12,12s12-5.4,12-12
+		S126.7,24,120,24z"/>
+	<path fill="currentColor" d="M84,12c-6.6,0-12,5.4-12,12v12c0,6.6,5.4,12,12,12V24h12C96,17.4,90.7,12,84,12z"/>
+	<g>
+		<path fill="currentColor" d="M96,12v24c0,6.6,5.4,12,12,12V24C108,17.4,102.7,12,96,12z"/>
+		<rect x="96" fill="currentColor" width="12" height="12"/>
+	</g>
+</g>
+</svg>

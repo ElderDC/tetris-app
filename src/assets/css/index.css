@@ -1,0 +1,201 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: 217 233 37;
+    --color-surface: 249 249 249;
+    --color-background: 2 12 32;
+    --color-background-100: 14 22 39;
+    --color-background-200: 19 30 52;
+    --color-background-300: 24 37 66;
+  }
+
+  html.dark * {
+    --color-primary: 217 233 37;
+    --color-surface: 249 249 249;
+    --color-background: 2 12 32;
+    --color-background-100: 14 22 39;
+    --color-background-200: 19 30 52;
+    --color-background-300: 24 37 66;
+  }
+
+  html.light * {
+    --color-primary: 217 233 37;
+    --color-surface: 38 43 60;
+    --color-background: 249 249 249;
+    --color-background-100: 243 243 243;
+    --color-background-200: 239 240 241;
+    --color-background-300: 211 214 218;
+  }
+
+  .h-dscreen {
+    @apply h-screen;
+    height: 100vh;
+  }
+
+  .min-h-dscreen {
+    @apply min-h-screen;
+    min-height: 100dvh;
+  }
+
+  .max-h-dscreen {
+    @apply max-h-screen;
+    max-height: 100vh;
+  }
+}
+
+body {
+  @apply bg-background text-surface overflow-x-hidden;
+  font-family: 'Poppins', sans-serif;
+  overflow: hidden;
+}
+
+#root {
+  min-height: 100vh;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+::-webkit-scrollbar {
+  @apply w-2 h-2;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  @apply bg-surface/80 rounded-full transition;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-surface;
+}
+
+@layer components {
+  /* Button component */
+
+  .btn {
+    @apply h-12 px-6 flex flex-wrap items-center justify-center
+		border-current border-solid bg-black text-white text-sm
+		uppercase font-bold leading-none rounded transition;
+  }
+  .btn.btn-block {
+    @apply w-full;
+  }
+  .btn.btn-icon {
+    @apply w-12;
+  }
+  .btn.btn-outlined {
+    @apply border-2;
+  }
+  .btn.btn-text,
+  .btn.btn-ghost,
+  .btn.btn-outlined {
+    @apply bg-transparent;
+  }
+  .btn.btn-ghost::before,
+  .btn.btn-outlined::before {
+    content: '';
+    border-radius: inherit;
+    @apply absolute top-0 right-0 bottom-0 left-0 bg-current opacity-5 transition-opacity duration-300;
+  }
+  .btn.btn-ghost:hover::before,
+  .btn.btn-outlined:hover::before {
+    @apply opacity-10;
+  }
+  .btn.btn-rounded {
+    @apply rounded-full;
+  }
+  .btn.btn-disabled {
+    @apply pointer-events-none opacity-50;
+  }
+  .btn.btn-xs {
+    @apply h-8 px-4 text-xs;
+  }
+  .btn.btn-sm {
+    @apply h-10 px-4 text-xs;
+  }
+  .btn.btn-md {
+    @apply h-12 px-6 text-sm;
+  }
+  .btn.btn-lg {
+    @apply h-14 px-6 text-sm;
+  }
+  .btn.btn-xl {
+    @apply h-16 px-8 text-lg;
+  }
+  .btn.btn-icon.btn-xs {
+    @apply w-8;
+  }
+  .btn.btn-icon.btn-sm {
+    @apply w-10;
+  }
+  .btn.btn-icon.btn-md {
+    @apply w-12;
+  }
+  .btn.btn-icon.btn-lg {
+    @apply w-14;
+  }
+  .btn.btn-icon.btn-xl {
+    @apply w-16;
+  }
+
+  /* Card component */
+
+  .card {
+    @apply relative flex flex-col overflow-hidden rounded;
+  }
+  .card-body {
+    @apply relative flex flex-auto flex-col p-4 sm:p-8 gap-2 z-10;
+  }
+  .card-head {
+    @apply px-4 pt-4 sm:px-8 sm:pt-8 z-10;
+  }
+  .card-footer {
+    @apply px-4 pb-4 sm:px-8 sm:pb-8 z-10;
+  }
+  .card.card-densed .card-body {
+    @apply p-4;
+  }
+  .card.card-densed .card-head {
+    @apply px-4 pt-4;
+  }
+  .card.card-densed .card-footer {
+    @apply px-4 pb-4;
+  }
+  .card.card-outlined {
+    @apply border-2 border-solid;
+  }
+  .card.card-rounded {
+    @apply rounded-2xl;
+  }
+  .card.image-full > figure {
+    @apply absolute inset-0 z-0 bg-black/50;
+  }
+  .card.image-full > figure img {
+    @apply h-full w-full object-cover mix-blend-multiply;
+  }
+
+  /* Modal component */
+
+  .modal-container {
+    @apply fixed top-0 right-0 bottom-0 left-0
+		transition overflow-x-hidden;
+  }
+  .overlay {
+    @apply fixed top-0 right-0 bottom-0 left-0
+		transition overflow-x-hidden;
+  }
+  .modal {
+    @apply min-h-full flex justify-center;
+  }
+  .modal > div {
+    @apply p-12 max-w-full flex items-center;
+  }
+}
