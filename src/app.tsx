@@ -4,11 +4,12 @@ import BgTetris from '@/assets/svg/bg-tetris.svg';
 import { Button, Card, CardBody, CardHead, Icon, Text } from '@/components/ui/atoms';
 import { Modal } from '@/components/ui/molecules';
 import { TetrisLogo } from '@/components/svg';
-import { useAnimationFrame, useInterval, useKeyDown } from '@/hooks';
+import { useAnimationFrame, useInterval, useKeyDown, useSwipeDirection } from '@/hooks';
+import { EDirection } from '@/types.d';
 
 const PIXEL_SIZE = 30;
-const CANVAS_WIDTH = 16;
-const CANVAS_HEIGHT = 24;
+const CANVAS_WIDTH = 10;
+const CANVAS_HEIGHT = 20;
 
 type IBoard = IPixel[][];
 
@@ -142,12 +143,23 @@ const createBoard = () => {
   return board;
 };
 
+const getRamdomPiece = () => {
+  return pieces[Math.floor(Math.random() * pieces.length)];
+};
+
 const App = () => {
   const $canvas = useRef<HTMLCanvasElement>(null);
   const board = useRef<IBoard>(createBoard());
-  const piece = useRef<IPiece>(pieces[Math.floor(Math.random() * pieces.length)]);
+  const piece = useRef<IPiece>(getRamdomPiece());
   const piecePosition = useRef<IPosition2D>({ x: 0, y: 0 });
+
+  const [nextPiece, setNextPrice] = useState<IPiece>(getRamdomPiece());
   const [game, setGame] = useState<IGame>(defaultGame);
+
+  const levelMultiplier = Math.max(
+    levels[game.level] - Math.floor(game.lines / 10) * 20,
+    100,
+  );
 
   const handleChangeGame = (key: string, value: string | number | boolean) => {
     setGame((prev) => ({ ...prev, [key]: value }));
@@ -174,9 +186,16 @@ const App = () => {
   const checkRows = () => {
     board.current.forEach((row, y) => {
       const isFull = row.every((col) => col.value === 1);
+
       if (isFull) {
         board.current.splice(y, 1);
         board.current.unshift(Array(CANVAS_WIDTH).fill({ value: 0, color: 'black' }));
+
+        setGame((prev) => ({
+          ...prev,
+          lines: prev.lines + 1,
+          score: prev.score + 100,
+        }));
       }
     });
   };
@@ -191,7 +210,8 @@ const App = () => {
   };
 
   const newPiece = () => {
-    piece.current = pieces[Math.floor(Math.random() * pieces.length)];
+    piece.current = nextPiece;
+    setNextPrice(getRamdomPiece());
     const x = Math.floor(CANVAS_WIDTH / 2) - 1;
     piecePosition.current = { x, y: -1 };
   };
@@ -231,7 +251,7 @@ const App = () => {
         if (shape[i][j] === 1) {
           if (boardY >= CANVAS_HEIGHT) return false;
           if (boardX < 0 || boardX >= CANVAS_WIDTH) return false;
-          if (board.current[boardY][boardX].value === 1) return false;
+          if (board.current[boardY]?.[boardX].value === 1) return false;
         }
       }
     }
@@ -264,19 +284,6 @@ const App = () => {
       },
     };
     moves[move](piece.current, piecePosition.current);
-  };
-
-  const handleKeyDown = (e: KeyboardEvent) => {
-    const moveMap: { [key: string]: EMove } = {
-      ArrowLeft: EMove.LEFT,
-      ArrowRight: EMove.RIGHT,
-      ArrowDown: EMove.DOWN,
-      ArrowUp: EMove.ROTATE,
-      ' ': EMove.ROTATE,
-    };
-
-    const move = moveMap[e.key];
-    if (move) movePiece(move);
   };
 
   const solidifyPiece = () => {
@@ -314,30 +321,60 @@ const App = () => {
     if (validateGameOver()) handleFinish();
   };
 
-  useKeyDown(handleKeyDown);
-
   const [startAnimation, cancelAnimation] = useAnimationFrame(render);
-  const [startInterval, cancelInterval] = useInterval(gameStep, levels[game.level]);
+  const [startInterval, cancelInterval] = useInterval(gameStep, levelMultiplier);
 
   const handleNewGame = () => {
     board.current = createBoard();
     newPiece();
-    handleChangeGame('isRunning', true);
-    handleChangeGame('isFinish', false);
+    setGame((prev) => ({
+      ...prev,
+      score: 0,
+      lines: 0,
+      isFinish: false,
+      isRunning: true,
+    }));
   };
 
   const handleRestart = () => {
-    handleChangeGame('isRunning', true);
+    setGame((prev) => ({ ...prev, isRunning: true }));
   };
 
   const handlePause = () => {
-    handleChangeGame('isRunning', !game.isRunning);
+    setGame((prev) => ({ ...prev, isRunning: false }));
   };
 
   const handleFinish = () => {
-    handleChangeGame('isRunning', false);
-    handleChangeGame('isFinish', true);
+    setGame((prev) => ({ ...prev, isRunning: false, isFinish: true }));
   };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    const moveMap: { [key: string]: EMove } = {
+      ArrowLeft: EMove.LEFT,
+      ArrowRight: EMove.RIGHT,
+      ArrowDown: EMove.DOWN,
+      ArrowUp: EMove.ROTATE,
+      ' ': EMove.ROTATE,
+    };
+
+    const move = moveMap[e.key];
+    if (move) movePiece(move);
+  };
+
+  const handleTouch = (direction: EDirection) => {
+    const moveMap: Record<EDirection, EMove> = {
+      [EDirection.LEFT]: EMove.LEFT,
+      [EDirection.RIGHT]: EMove.RIGHT,
+      [EDirection.DOWN]: EMove.DOWN,
+      [EDirection.UP]: EMove.ROTATE,
+    };
+
+    const move = moveMap[direction];
+    if (move) movePiece(move);
+  };
+
+  useKeyDown(handleKeyDown);
+  useSwipeDirection(handleTouch, PIXEL_SIZE);
 
   useEffect(() => {
     if (game.isRunning) {
@@ -347,20 +384,72 @@ const App = () => {
       cancelAnimation();
       cancelInterval();
     }
+    return () => {
+      cancelAnimation();
+      cancelInterval();
+    };
   }, [game.isRunning]);
 
-  // useEffect(() => {
-  //   startInterval();
-  // }, [game.level]);
+  useEffect(() => {
+    if (game.isRunning) startInterval();
+  }, [levelMultiplier]);
 
   return (
     <div className="min-h-dscreen grid items-center justify-center">
-      <div className="relative p-16">
-        <div className="absolute top-0 left-0 w-full p-20 flex justify-end">
-          <Button icon ghost onClick={() => handlePause()}>
-            <Icon>pause</Icon>
+      <div className="relative m-8 flex justify-center">
+        <div className="absolute z-10 top-0 left-0 w-full p-4 flex justify-between">
+          <div className="px-4 py-2">
+            <Text variant="h6">{game.score}</Text>
+          </div>
+          <div className="flex flex-col">
+            <Button icon ghost onClick={() => handlePause()}>
+              <Icon>pause</Icon>
+            </Button>
+            <Button icon ghost>
+              {game.isRunning ? (
+                <div
+                  className="grid"
+                  style={{
+                    gridTemplateColumns: `repeat(${nextPiece.shape[0].length}, ${10}px)`,
+                    gridTemplateRows: `repeat(${nextPiece.shape.length}, ${10}px)`,
+                  }}
+                >
+                  {nextPiece.shape.map((row, y) =>
+                    row.map((col, x) => {
+                      if (col === 1) {
+                        return (
+                          <div
+                            key={`${x}-${y}`}
+                            className="w-full h-full border-2 border-background"
+                            style={{ background: nextPiece.color }}
+                          />
+                        );
+                      }
+                      return (
+                        <div key={`${x}-${y}`} className="wfull hfull bg-transparent" />
+                      );
+                    }),
+                  )}
+                </div>
+              ) : null}
+            </Button>
+          </div>
+        </div>
+        <div className="absolute z-10 bottom-0 p-4">
+          <Button
+            icon
+            ghost
+            className="absolute z-10"
+            onClick={() => movePiece(EMove.ROTATE)}
+          >
+            <Icon>rotate_90_degrees_cw</Icon>
           </Button>
         </div>
+        <div className="absolute z-0 inset-0 grid grid-cols-2">
+          <div className="relative" onClick={() => movePiece(EMove.LEFT)} />
+          <div className="relative" onClick={() => movePiece(EMove.RIGHT)} />
+        </div>
+
         <canvas
           id="canvas"
           style={{

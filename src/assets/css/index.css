@@ -1,3 +1,4 @@
+@import url('../fonts/Orbitron/Orbitron.css');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -48,14 +49,15 @@
 
 body {
   @apply bg-background text-surface overflow-x-hidden;
-  font-family: 'Poppins', sans-serif;
+  font-family: 'Orbitron', sans-serif;
   overflow: hidden;
 }
 
 #root {
   min-height: 100vh;
   max-height: 100vh;
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
@@ -186,11 +188,11 @@ body {
 
   .modal-container {
     @apply fixed top-0 right-0 bottom-0 left-0
-		transition overflow-x-hidden;
+		transition overflow-x-hidden z-50;
   }
   .overlay {
     @apply fixed top-0 right-0 bottom-0 left-0
-		transition overflow-x-hidden;
+		transition overflow-x-hidden z-50;
   }
   .modal {
     @apply min-h-full flex justify-center;
