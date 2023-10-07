@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 
 import BgTetris from '@/assets/svg/bg-tetris.svg';
+import tetrisSound from '@/assets/sounds/tetris.mp3';
 import { Button, Card, CardBody, CardHead, Icon, Text } from '@/components/ui/atoms';
 import { Modal } from '@/components/ui/molecules';
 import { TetrisLogo } from '@/components/svg';
@@ -50,6 +51,7 @@ interface IPosition2D {
 interface IGame {
   isRunning: boolean;
   isFinish: boolean;
+  sound: boolean;
   level: ELevel;
   score: number;
   lines: number;
@@ -129,6 +131,7 @@ const defaultGame: IGame = {
   level: ELevel.NORMAL,
   isRunning: false,
   isFinish: true,
+  sound: false,
   score: 0,
   lines: 0,
 };
@@ -149,6 +152,7 @@ const getRamdomPiece = () => {
 
 const App = () => {
   const $canvas = useRef<HTMLCanvasElement>(null);
+  const sound = useRef<HTMLAudioElement>(new Audio(tetrisSound));
   const board = useRef<IBoard>(createBoard());
   const piece = useRef<IPiece>(getRamdomPiece());
   const piecePosition = useRef<IPosition2D>({ x: 0, y: 0 });
@@ -394,6 +398,17 @@ const App = () => {
     if (game.isRunning) startInterval();
   }, [levelMultiplier]);
 
+  useEffect(() => {
+    if (game.sound) {
+      sound.current.currentTime = 0;
+      sound.current.loop = true;
+      sound.current.volume = 0.01;
+      sound.current.play();
+    } else {
+      sound.current.pause();
+    }
+  }, [game.sound]);
+
   return (
     <div className="min-h-dscreen grid items-center justify-center">
       <div className="relative m-8 flex justify-center">
@@ -401,7 +416,7 @@ const App = () => {
           <div className="px-4 py-2">
             <Text variant="h6">{game.score}</Text>
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col gap-1">
             <Button icon ghost onClick={() => handlePause()}>
               <Icon>pause</Icon>
             </Button>
@@ -463,7 +478,17 @@ const App = () => {
       </div>
       <Modal value={!game.isRunning}>
         <Card bgColor="background-200" style={{ width: 400 }}>
-          <CardHead className="text-center">
+          <CardHead className="text-center relative">
+            <div className="flex justify-end">
+              <Button
+                icon
+                text
+                rounded
+                onClick={() => handleChangeGame('sound', !game.sound)}
+              >
+                <Icon>{game.sound ? 'volume_up' : 'volume_off'}</Icon>
+              </Button>
+            </div>
             <TetrisLogo className="m-8" />
           </CardHead>
           <CardBody className="space-y-4">
