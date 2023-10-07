@@ -464,7 +464,7 @@ const App = () => {
       <Modal value={!game.isRunning}>
         <Card bgColor="background-200" style={{ width: 400 }}>
           <CardHead className="text-center">
-            <TetrisLogo className="p-8" />
+            <TetrisLogo className="m-8" />
           </CardHead>
           <CardBody className="space-y-4">
             <div className="grid grid-cols-3 rounded-full overflow-hidden">
