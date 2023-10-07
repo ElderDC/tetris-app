@@ -151,25 +151,19 @@ body {
   /* Card component */
 
   .card {
-    @apply relative flex flex-col overflow-hidden rounded;
+    @apply relative p-8 flex flex-col gap-8 overflow-hidden rounded;
   }
   .card-body {
-    @apply relative flex flex-auto flex-col p-4 sm:p-8 gap-2 z-10;
+    @apply relative flex flex-auto flex-col gap-2 z-10;
   }
   .card-head {
-    @apply px-4 pt-4 sm:px-8 sm:pt-8 z-10;
+    @apply z-10;
   }
   .card-footer {
-    @apply px-4 pb-4 sm:px-8 sm:pb-8 z-10;
+    @apply z-10;
   }
-  .card.card-densed .card-body {
-    @apply p-4;
-  }
-  .card.card-densed .card-head {
-    @apply px-4 pt-4;
-  }
-  .card.card-densed .card-footer {
-    @apply px-4 pb-4;
+  .card.card-densed {
+    @apply p-4 gap-4;
   }
   .card.card-outlined {
     @apply border-2 border-solid;
@@ -198,6 +192,6 @@ body {
     @apply min-h-full flex justify-center;
   }
   .modal > div {
-    @apply p-12 max-w-full flex items-center;
+    @apply p-8 sm:p-12 max-w-full flex items-center;
   }
 }

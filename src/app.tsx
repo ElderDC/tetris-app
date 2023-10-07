@@ -362,11 +362,11 @@ const App = () => {
   };
 
   const handleTouch = (direction: EDirection) => {
-    const moveMap: Record<EDirection, EMove> = {
+    const moveMap: Record<EDirection, EMove | undefined> = {
       [EDirection.LEFT]: EMove.LEFT,
       [EDirection.RIGHT]: EMove.RIGHT,
       [EDirection.DOWN]: EMove.DOWN,
-      [EDirection.UP]: EMove.ROTATE,
+      [EDirection.UP]: undefined,
     };
 
     const move = moveMap[direction];
@@ -464,7 +464,7 @@ const App = () => {
       <Modal value={!game.isRunning}>
         <Card bgColor="background-200" style={{ width: 400 }}>
           <CardHead className="text-center">
-            <TetrisLogo />
+            <TetrisLogo className="p-8" />
           </CardHead>
           <CardBody className="space-y-4">
             <div className="grid grid-cols-3 rounded-full overflow-hidden">
