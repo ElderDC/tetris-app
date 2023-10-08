@@ -1,67 +1,28 @@
 import { useEffect, useRef, useState } from 'react';
 
 import BgTetris from '@/assets/svg/bg-tetris.svg';
-import tetrisSound from '@/assets/sounds/tetris.mp3';
+// import tetrisSound from '@/assets/sounds/tetris.mp3';
+import gameJumpSound from '@/assets/sounds/game-jump.wav';
+import gameOverSound from '@/assets/sounds/game-over.wav';
+
 import { Button, Card, CardBody, CardHead, Icon, Text } from '@/components/ui/atoms';
 import { Modal } from '@/components/ui/molecules';
 import { TetrisLogo } from '@/components/svg';
 import { useAnimationFrame, useInterval, useKeyDown, useSwipeDirection } from '@/hooks';
-import { EDirection } from '@/types.d';
+import {
+  EDirection,
+  ELevel,
+  EMove,
+  EPiece,
+  IBoard,
+  IGame,
+  IPiece,
+  IPosition2D,
+} from '@/types.d';
 
 const PIXEL_SIZE = 30;
 const CANVAS_WIDTH = 10;
 const CANVAS_HEIGHT = 20;
-
-type IBoard = IPixel[][];
-
-interface IPixel {
-  value: 1 | 0;
-  color: string;
-}
-
-enum ELevel {
-  EASY = 'EASY',
-  NORMAL = 'NORMAL',
-  HARD = 'HARD',
-}
-
-enum EPiece {
-  O,
-  I,
-  T,
-  L,
-  J,
-  S,
-  Z,
-}
-
-enum EMove {
-  LEFT = 'LEFT',
-  RIGHT = 'RIGHT',
-  DOWN = 'DOWN',
-  ROTATE = 'ROTATE',
-  CHANGE = 'CHANGE',
-}
-
-interface IPosition2D {
-  x: number;
-  y: number;
-}
-
-interface IGame {
-  isRunning: boolean;
-  isFinish: boolean;
-  sound: boolean;
-  level: ELevel;
-  score: number;
-  lines: number;
-}
-
-interface IPiece {
-  name: EPiece;
-  color: string;
-  shape: number[][];
-}
 
 const pieces: IPiece[] = [
   {
@@ -136,6 +97,13 @@ const defaultGame: IGame = {
   lines: 0,
 };
 
+const scores: Record<number, number> = {
+  1: 100,
+  2: 250,
+  3: 450,
+  4: 600,
+};
+
 const createBoard = () => {
   const board: IBoard = Array.from({ length: CANVAS_HEIGHT }, () =>
     Array(CANVAS_WIDTH).fill({
@@ -152,7 +120,9 @@ const getRamdomPiece = () => {
 
 const App = () => {
   const $canvas = useRef<HTMLCanvasElement>(null);
-  const sound = useRef<HTMLAudioElement>(new Audio(tetrisSound));
+  // const sound = useRef<HTMLAudioElement>(new Audio(tetrisSound));
+  const soundJump = useRef<HTMLAudioElement>(new Audio(gameJumpSound));
+  const soundOver = useRef<HTMLAudioElement>(new Audio(gameOverSound));
   const board = useRef<IBoard>(createBoard());
   const piece = useRef<IPiece>(getRamdomPiece());
   const piecePosition = useRef<IPosition2D>({ x: 0, y: 0 });
@@ -178,46 +148,16 @@ const App = () => {
     ctx.fillStyle = color;
     ctx.fillRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
     ctx.lineWidth = 10;
-    ctx.lineJoin = 'round';
     ctx.strokeStyle = '#020c20';
     ctx.strokeRect(x * PIXEL_SIZE, y * PIXEL_SIZE, PIXEL_SIZE, PIXEL_SIZE);
-  };
-
-  const clearBoard = (ctx: CanvasRenderingContext2D) => {
-    ctx.clearRect(0, 0, CANVAS_WIDTH * PIXEL_SIZE, CANVAS_HEIGHT * PIXEL_SIZE);
-  };
-
-  const checkRows = () => {
-    board.current.forEach((row, y) => {
-      const isFull = row.every((col) => col.value === 1);
-
-      if (isFull) {
-        board.current.splice(y, 1);
-        board.current.unshift(Array(CANVAS_WIDTH).fill({ value: 0, color: 'black' }));
-
-        setGame((prev) => ({
-          ...prev,
-          lines: prev.lines + 1,
-          score: prev.score + 100,
-        }));
-      }
-    });
   };
 
   const drawBoard = (ctx: CanvasRenderingContext2D) => {
     board.current.forEach((row, y) => {
       row.forEach((col, x) => {
         if (col.value === 1) drawPixel(ctx, x, y, col.color);
-        // else drawPixel(ctx, x, y, 'transparent');
       });
     });
-  };
-
-  const newPiece = () => {
-    piece.current = nextPiece;
-    setNextPrice(getRamdomPiece());
-    const x = Math.floor(CANVAS_WIDTH / 2) - 1;
-    piecePosition.current = { x, y: -1 };
   };
 
   const drawPiece = (ctx: CanvasRenderingContext2D) => {
@@ -235,32 +175,40 @@ const App = () => {
     });
   };
 
-  const render = () => {
-    const ctx = $canvas.current?.getContext('2d');
-    if (!ctx) return;
-
-    clearBoard(ctx);
-    drawBoard(ctx);
-    drawPiece(ctx);
+  const clearBoard = (ctx: CanvasRenderingContext2D) => {
+    ctx.clearRect(0, 0, CANVAS_WIDTH * PIXEL_SIZE, CANVAS_HEIGHT * PIXEL_SIZE);
   };
 
-  const validatePiece = (piece: IPiece, { x, y }: IPosition2D) => {
-    const { shape } = piece;
+  const checkRows = () => {
+    let deletedLines = 0;
 
-    for (let i = 0; i < shape.length; i++) {
-      for (let j = 0; j < shape[i].length; j++) {
-        const boardY = y + i;
-        const boardX = x + j;
+    board.current.forEach((row, y) => {
+      const isFull = row.every((col) => col.value === 1);
 
-        if (shape[i][j] === 1) {
-          if (boardY >= CANVAS_HEIGHT) return false;
-          if (boardX < 0 || boardX >= CANVAS_WIDTH) return false;
-          if (board.current[boardY]?.[boardX].value === 1) return false;
-        }
+      if (isFull) {
+        board.current.splice(y, 1);
+        board.current.unshift(Array(CANVAS_WIDTH).fill({ value: 0, color: 'black' }));
+
+        deletedLines += 1;
       }
-    }
+    });
 
-    return true;
+    if (deletedLines > 0) {
+      const addToScore = deletedLines > 4 ? scores[4] : scores[deletedLines];
+      setGame((prev) => ({
+        ...prev,
+        lines: prev.lines + deletedLines,
+        score: prev.score + addToScore,
+      }));
+    }
+  };
+
+  const newPiece = () => {
+    piece.current = nextPiece;
+    setNextPrice(getRamdomPiece());
+
+    const x = Math.floor(CANVAS_WIDTH / 2) - 1;
+    piecePosition.current = { x, y: -1 };
   };
 
   const movePiece = (move: EMove) => {
@@ -304,11 +252,39 @@ const App = () => {
     });
   };
 
+  const validatePiece = (piece: IPiece, { x, y }: IPosition2D) => {
+    const { shape } = piece;
+
+    for (let i = 0; i < shape.length; i++) {
+      for (let j = 0; j < shape[i].length; j++) {
+        const boardY = y + i;
+        const boardX = x + j;
+
+        if (shape[i][j] === 1) {
+          if (boardY >= CANVAS_HEIGHT) return false;
+          if (boardX < 0 || boardX >= CANVAS_WIDTH) return false;
+          if (board.current[boardY]?.[boardX].value === 1) return false;
+        }
+      }
+    }
+
+    return true;
+  };
+
   const validateGameOver = () => {
     return board.current[0].some((col) => col.value === 1);
   };
 
-  const gameStep = () => {
+  const render = () => {
+    const ctx = $canvas.current?.getContext('2d');
+    if (!ctx) return;
+
+    clearBoard(ctx);
+    drawBoard(ctx);
+    drawPiece(ctx);
+  };
+
+  const gameStep = async () => {
     const isValid = validatePiece(piece.current, {
       x: piecePosition.current.x,
       y: piecePosition.current.y + 1,
@@ -317,6 +293,11 @@ const App = () => {
     if (isValid) {
       movePiece(EMove.DOWN);
     } else {
+      if (game.sound) {
+        soundJump.current.currentTime = 0;
+        soundJump.current.play();
+      }
+
       solidifyPiece();
       checkRows();
       newPiece();
@@ -349,11 +330,19 @@ const App = () => {
   };
 
   const handleFinish = () => {
+    if (game.sound) {
+      soundOver.current.currentTime = 0;
+      soundOver.current.play();
+    }
     setGame((prev) => ({ ...prev, isRunning: false, isFinish: true }));
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
     const moveMap: { [key: string]: EMove } = {
+      a: EMove.LEFT,
+      d: EMove.RIGHT,
+      s: EMove.DOWN,
+      w: EMove.ROTATE,
       ArrowLeft: EMove.LEFT,
       ArrowRight: EMove.RIGHT,
       ArrowDown: EMove.DOWN,
@@ -377,8 +366,8 @@ const App = () => {
     if (move) movePiece(move);
   };
 
-  useKeyDown(handleKeyDown);
-  useSwipeDirection(handleTouch, PIXEL_SIZE);
+  useKeyDown((event) => handleKeyDown(event), game.isRunning);
+  useSwipeDirection((event) => handleTouch(event), PIXEL_SIZE, game.isRunning);
 
   useEffect(() => {
     if (game.isRunning) {
@@ -398,16 +387,16 @@ const App = () => {
     if (game.isRunning) startInterval();
   }, [levelMultiplier]);
 
-  useEffect(() => {
-    if (game.sound) {
-      sound.current.currentTime = 0;
-      sound.current.loop = true;
-      sound.current.volume = 0.01;
-      sound.current.play();
-    } else {
-      sound.current.pause();
-    }
-  }, [game.sound]);
+  // useEffect(() => {
+  //   if (game.sound) {
+  //     sound.current.currentTime = 0;
+  //     sound.current.loop = true;
+  //     sound.current.volume = 0.03;
+  //     sound.current.play();
+  //   } else {
+  //     sound.current.pause();
+  //   }
+  // }, [game.sound]);
 
   return (
     <div className="min-h-dscreen grid items-center justify-center">

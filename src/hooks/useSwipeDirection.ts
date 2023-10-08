@@ -4,6 +4,7 @@ import { EDirection } from '@/types.d';
 export const useSwipeDirection = (
   callback: (value: EDirection) => void,
   swipeStep: number = 1,
+  active = true,
 ) => {
   const [deltaX, setDeltaX] = useState(0);
   const [deltaY, setDeltaY] = useState(0);
@@ -38,12 +39,9 @@ export const useSwipeDirection = (
       document.addEventListener('touchend', handleTouchEnd);
     };
 
-    document.addEventListener('touchstart', handleTouchStart);
-
-    return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-    };
-  }, []);
+    if (active) document.addEventListener('touchstart', handleTouchStart);
+    return () => document.removeEventListener('touchstart', handleTouchStart);
+  }, [active]);
 
   useEffect(() => {
     if (Math.abs(deltaX) > Math.abs(deltaY)) {
